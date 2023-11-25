@@ -3,8 +3,10 @@ import { Inter } from "next/font/google";
 
 import "./globals.css";
 
-import { ThemeProvider } from "@/components/theme-provider";
 import { ReactNode } from "react";
+
+import { GameContextProvider } from "@/components/game-context-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,7 +27,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <GameContextProvider>{children}</GameContextProvider>
           </ThemeProvider>
         </body>
       </html>

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "ahooks": "^3.7.8",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "lucide-react": "^0.293.0",
@@ -16,6 +17,7 @@
     "next-themes": "^0.2.1",
     "react": "^18",
     "react-dom": "^18",
+    "react-simple-keyboard": "^3.7.41",
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7"
   },
