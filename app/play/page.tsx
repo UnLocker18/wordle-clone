@@ -4,17 +4,14 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useKeyPress } from "ahooks";
 
+import { lowercaseLetters } from "@/lib/utils";
 import {
   useGameData,
   useSetGameData,
 } from "@/components/game-context-provider";
 import ScreenKeyboard from "@/components/screen-keyboard";
-import gameConfig from "../game-config";
 
-const lowercaseLetters = (() => {
-  const caps = [...Array(26)].map((val, i) => String.fromCharCode(i + 65));
-  return caps.map((letter) => letter.toLowerCase());
-})();
+import gameConfig from "../game-config";
 
 const physicalKeysToHandle = [...lowercaseLetters, "Backspace", "Enter"];
 
@@ -33,11 +30,13 @@ export default function Play() {
   const router = useRouter();
   const keyboard = useRef(null);
 
-  const { correctWord } = useGameData();
+  const { correctWord, error, loading } = useGameData();
   const setGameData = useSetGameData();
 
   const [input, setInput] = useState("");
-  const [words, setWords] = useState<(string | null)[]>(Array.from({length: gameConfig.maxAttempts}, () => null));
+  const [words, setWords] = useState<(string | null)[]>(
+    Array.from({ length: gameConfig.maxAttempts }, () => null)
+  );
   const activeIndex = words.findIndex((w) => w === null);
 
   useKeyPress(physicalKeysToHandle, (event) =>
@@ -72,8 +71,17 @@ export default function Play() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <WordsBoard {...{ words, correctWord, input, activeIndex }} />
-      <ScreenKeyboard keyboardRef={keyboard} onKeyPress={onKeyPress} />
+      {loading ? (
+        <div>LOADING</div>
+      ) : error ? (
+        <div>ERROR - RETRY</div>
+      ) : (
+        <>
+          <div>{correctWord}</div>
+          <WordsBoard {...{ words, correctWord, input, activeIndex }} />
+          <ScreenKeyboard keyboardRef={keyboard} onKeyPress={onKeyPress} />
+        </>
+      )}
     </main>
   );
 }
