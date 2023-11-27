@@ -7,7 +7,7 @@ import { twMerge } from "tailwind-merge"
 
 export const getRandomWord = (wordLength: number): Promise<string> => {
   return new Promise((resolve, reject) => {
-    fetch(`https://random-word-api.herokuapp.com/word?length=${wordLength}`)
+    fetch(`https://random-word-api.herokuapp.com/word?length=${wordLength}&lang=it`)
       .then((response) => response.json())
       .then((response) => resolve((response as string[])[0]))
       .catch((error) => reject(error));

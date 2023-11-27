@@ -6,6 +6,7 @@ import { useKeyPress } from "ahooks";
 
 import { lowercaseLetters } from "@/lib/utils";
 import {
+  initGameData,
   useGameData,
   useSetGameData,
 } from "@/components/game-context-provider";
@@ -30,6 +31,7 @@ export default function Play() {
   const router = useRouter();
   const keyboard = useRef(null);
 
+  initGameData();
   const { correctWord, error, loading } = useGameData();
   const setGameData = useSetGameData();
 

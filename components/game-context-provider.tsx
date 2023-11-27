@@ -1,10 +1,17 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useContext,
+  useState,
+} from "react";
 import { useRequest } from "ahooks";
 
-import gameConfig from "@/app/game-config";
 import { getRandomWord } from "@/lib/utils";
+import gameConfig from "@/app/game-config";
 
 interface GameData {
   correctWord: string;
@@ -19,7 +26,9 @@ const GameContext = createContext<GameData>({
   playerWord: "",
   attempts: 0,
 });
-const GameSetContext = createContext<(gameData: GameData) => void>(() => {});
+const GameSetContext = createContext<Dispatch<SetStateAction<GameData>>>(
+  () => {}
+);
 
 export function useGameData() {
   return useContext(GameContext);
@@ -29,22 +38,36 @@ export function useSetGameData() {
   return useContext(GameSetContext);
 }
 
+export function initGameData() {
+  const setGameData = useSetGameData();
+
+  useRequest(() => getRandomWord(gameConfig.wordLength), {
+    onBefore: () =>
+      setGameData((gameData: GameData) => {
+        return { ...gameData, loading: true };
+      }),
+    onSuccess: (data) => {
+      setGameData((gameData: GameData) => {
+        return {
+          ...gameData,
+          loading: false,
+          correctWord: data.toUpperCase(),
+        };
+      });
+      console.warn(`The correct word is ${data.toUpperCase()}`);
+    },
+    onError: (error) =>
+      setGameData((gameData: GameData) => {
+        return { ...gameData, loading: false, error };
+      }),
+  });
+}
+
 export function GameContextProvider({ children }: { children: ReactNode }) {
   const [gameData, setGameData] = useState<GameData>({
     correctWord: "",
     playerWord: "",
     attempts: 0,
-  });
-
-  useRequest(() => getRandomWord(gameConfig.wordLength), {
-    onBefore: () => setGameData({ ...gameData, loading: true }),
-    onSuccess: (data) =>
-      setGameData({
-        ...gameData,
-        loading: false,
-        correctWord: data.toUpperCase(),
-      }),
-    onError: (error) => setGameData({ ...gameData, loading: false, error }),
   });
 
   return (
