@@ -24,6 +24,7 @@ const ScreenKeyboard: FunctionComponent<IProps> = ({
 }) => {
   return (
     <Keyboard
+      theme="hg-theme-default screen-keyboard extra-specificity"
       keyboardRef={(r) => (keyboardRef.current = r)}
       layout={layout}
       onChange={onChange}

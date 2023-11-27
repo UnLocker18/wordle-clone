@@ -1,10 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useKeyPress } from "ahooks";
 
-import { lowercaseLetters } from "@/lib/utils";
+import { cn, lowercaseLetters } from "@/lib/utils";
+import { Loader } from "@/components/ui/loader";
+import { H1 } from "@/components/ui/typography";
 import {
   initGameData,
   useGameData,
@@ -72,14 +74,13 @@ export default function Play() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="grow flex flex-col items-center justify-between px-4 py-8 md:px-16">
       {loading ? (
-        <div>LOADING</div>
+        <Loader />
       ) : error ? (
         <div>ERROR - RETRY</div>
       ) : (
         <>
-          <div>{correctWord}</div>
           <WordsBoard {...{ words, correctWord, input, activeIndex }} />
           <ScreenKeyboard keyboardRef={keyboard} onKeyPress={onKeyPress} />
         </>
@@ -99,29 +100,72 @@ function WordsBoard({
   input: string;
   activeIndex: number;
 }) {
-  return words.map((word, index) =>
-    index === activeIndex ? (
-      <div key={index}>{input}</div>
-    ) : (
-      <div key={index}>
-        {word
-          ? word.split("").map((letter, i) => {
-              let className = "";
-              if (correctWord[i] === letter) {
-                className = "bg-green-300";
-              } else if (correctWord.includes(letter)) {
-                className = "bg-yellow-300";
-              } else {
-                className = "bg-slate-300";
-              }
-              return (
-                <span key={i} {...{ className }}>
-                  {letter}
-                </span>
-              );
-            })
-          : ""}
-      </div>
-    )
+  const emptyWord = "-".repeat(correctWord.length);
+  input = input.concat("-".repeat(correctWord.length - input.length));
+
+  const LetterBlocks = ({
+    word,
+    showHints = false,
+  }: {
+    word: string;
+    showHints?: boolean;
+  }) => (
+    <div className="flex gap-2">
+      {word.split("").map((letter, i) => (
+        <LetterBlock
+          key={i}
+          {...{
+            letter,
+            correctWord,
+            letterIndex: i,
+            showHints,
+          }}
+        />
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col gap-2">
+      {words.map((word, index) => (
+        <LetterBlocks
+          key={index}
+          word={index === activeIndex ? input : word || emptyWord}
+          showHints={index !== activeIndex && word !== null}
+        />
+      ))}
+    </div>
+  );
+}
+
+function LetterBlock({
+  letter,
+  correctWord,
+  letterIndex,
+  showHints,
+}: {
+  letter: string;
+  correctWord: string;
+  letterIndex: number;
+  showHints: boolean;
+}) {
+  let hintsClassName = "";
+  if (correctWord[letterIndex] === letter) {
+    hintsClassName = "bg-success";
+  } else if (correctWord.includes(letter)) {
+    hintsClassName = "bg-warning";
+  } else {
+    hintsClassName = "bg-neutral";
+  }
+  return (
+    <div
+      key={letterIndex}
+      className={cn(
+        "flex items-center justify-center w-12 h-12 bg-card border-2 border-border rounded-sm",
+        showHints && hintsClassName
+      )}
+    >
+      <H1 className="font-semibold">{letter !== "-" ? letter : ""}</H1>
+    </div>
   );
 }
