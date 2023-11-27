@@ -1,8 +1,9 @@
 "use client";
 
-import { Fragment, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useKeyPress } from "ahooks";
+import { motion } from "framer-motion";
 
 import { cn, lowercaseLetters } from "@/lib/utils";
 import { Loader } from "@/components/ui/loader";
@@ -42,6 +43,7 @@ export default function Play() {
     Array.from({ length: gameConfig.maxAttempts }, () => null)
   );
   const activeIndex = words.findIndex((w) => w === null);
+  const [highlightHints, setHighlightHints] = useState(false);
 
   useKeyPress(physicalKeysToHandle, (event) =>
     onKeyPress(keyMapping(event.key))
@@ -51,6 +53,9 @@ export default function Play() {
     switch (button) {
       case "{enter}":
         if (input.length === correctWord.length) {
+          setHighlightHints(true);
+          setTimeout(() => setHighlightHints(false), 200);
+
           setWords(words.map((w, i) => (i === activeIndex ? input : w)));
           setInput("");
 
@@ -81,7 +86,15 @@ export default function Play() {
         <div>ERROR - RETRY</div>
       ) : (
         <>
-          <WordsBoard {...{ words, correctWord, input, activeIndex }} />
+          <WordsBoard
+            {...{
+              words,
+              correctWord,
+              input,
+              activeIndex,
+              highlightHints,
+            }}
+          />
           <ScreenKeyboard keyboardRef={keyboard} onKeyPress={onKeyPress} />
         </>
       )}
@@ -94,31 +107,42 @@ function WordsBoard({
   correctWord,
   input,
   activeIndex,
+  highlightHints,
 }: {
   words: (string | null)[];
   correctWord: string;
   input: string;
   activeIndex: number;
+  highlightHints: boolean;
 }) {
   const emptyWord = "-".repeat(correctWord.length);
-  input = input.concat("-".repeat(correctWord.length - input.length));
+  const fixedLengthInput = input.concat(
+    "-".repeat(correctWord.length - input.length)
+  );
 
   const LetterBlocks = ({
     word,
     showHints = false,
+    activeLetterIndex,
+    latestHintedWord,
   }: {
     word: string;
     showHints?: boolean;
+    activeLetterIndex: number;
+    latestHintedWord: boolean;
   }) => (
     <div className="flex gap-2">
       {word.split("").map((letter, i) => (
         <LetterBlock
           key={i}
+          letterIndex={i}
+          activeLetter={i === activeLetterIndex}
           {...{
             letter,
             correctWord,
-            letterIndex: i,
             showHints,
+            highlightHints,
+            latestHintedWord,
           }}
         />
       ))}
@@ -130,8 +154,10 @@ function WordsBoard({
       {words.map((word, index) => (
         <LetterBlocks
           key={index}
-          word={index === activeIndex ? input : word || emptyWord}
+          word={index === activeIndex ? fixedLengthInput : word || emptyWord}
           showHints={index !== activeIndex && word !== null}
+          activeLetterIndex={index === activeIndex ? input.length - 1 : -1}
+          latestHintedWord={index === activeIndex - 1}
         />
       ))}
     </div>
@@ -143,11 +169,17 @@ function LetterBlock({
   correctWord,
   letterIndex,
   showHints,
+  activeLetter,
+  highlightHints,
+  latestHintedWord,
 }: {
   letter: string;
   correctWord: string;
   letterIndex: number;
   showHints: boolean;
+  activeLetter: boolean;
+  highlightHints: boolean;
+  latestHintedWord: boolean;
 }) {
   let hintsClassName = "";
   if (correctWord[letterIndex] === letter) {
@@ -157,15 +189,27 @@ function LetterBlock({
   } else {
     hintsClassName = "bg-neutral";
   }
+
   return (
-    <div
+    <motion.div
       key={letterIndex}
       className={cn(
         "flex items-center justify-center w-12 h-12 bg-card border-2 border-border rounded-sm",
         showHints && hintsClassName
       )}
+      animate={{
+        opacity: showHints && highlightHints && latestHintedWord ? [0.6, 1] : 1,
+      }}
     >
-      <H1 className="font-semibold">{letter !== "-" ? letter : ""}</H1>
-    </div>
+      <H1 className="font-semibold">
+        {letter !== "-" ? (
+          <motion.div animate={{ scale: activeLetter ? [1.25, 1] : 1 }}>
+            {letter}
+          </motion.div>
+        ) : (
+          ""
+        )}
+      </H1>
+    </motion.div>
   );
 }
